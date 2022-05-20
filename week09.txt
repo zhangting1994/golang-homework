@@ -1,0 +1,31 @@
+1. 总结几种 socket 粘包的解包方式：fix length/delimiter based/length field based frame decoder。尝试举例其应用。
+答：
+fix length：使用包定长的方式来解决粘包问题。每次发送固定长度的数据包。
+delimiter based：通过自定义分隔符解决粘包问题。添加特殊符号，接收方通过这个特殊符号将接收到的数据包拆分开。
+length field based frame decoder：自定义长度解码器解决粘包问题。在消息头中定义长度字段，来标识消息的总长度。
+
+2. 实现一个从 socket connection 中解码出 goim 协议的解码器。
+func watchRep(ctx zmq.Context, global_rep_socket, global_sub_socket zmq.Socket, clients *[]string, pub_address string) {
+    for {
+        data, _ := global_rep_socket.Recv(0)
+        var req Request
+        _ = json.Unmarshal(data, &req)
+        if req.Type == "connect" {
+            var creq ConnRequest
+            json.Unmarshal(data, &creq)
+            if !strSliceContains(*clients, creq.RepAddress) {
+                global_sub_socket.Connect(creq.PubAddress)
+                reply, _ := json.Marshal(ConnReply{pub_address, *clients})
+                global_rep_socket.Send(reply, 0)
+                for _, adr := range *clients {
+                    req_socket := openSocket(ctx, zmq.REQ, adr)
+                    req_socket.Send(data, 0)
+                    req_socket.Close()
+                }
+                *clients = append(*clients, creq.RepAddress)
+                log.Printf("Connected: " + creq.RepAddress)
+            }
+        }
+        runtime.Gosched()
+    }
+}
