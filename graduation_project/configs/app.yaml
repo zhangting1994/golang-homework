@@ -1,0 +1,5 @@
+app:
+  port: 8000
+rpc:
+  port: 9037
+mysql: root:66666666@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Local

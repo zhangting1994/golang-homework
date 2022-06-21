@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package app;
+option go_package = "protocol/";
+
+service ParallelTask {
+  rpc Query (TaskRequest) returns (TaskResult) {}
+}
+
+message TaskRequest {
+  message Job {
+    string Id = 1;
+    string Type = 2;
+    string Link = 3;
+    string Sql = 4;
+  }
+
+  string Id = 1;
+  repeated Job Jobs = 2;
+}
+
+message TaskResult {
+  message JobResult {
+    string Id = 1;
+    string Result = 2;
+    string Msg = 3;
+  }
+
+  string Id = 1;
+  repeated JobResult Jobs = 2;
+}
